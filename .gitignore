@@ -1,8 +1,8 @@
 # Default ignored files
 /workspace.xml
 !.gitignore
-*/.idea/TableViewEx.iml
-*/.idea/inspectionProfiles/
-*/.idea/misc.xml
-*/.idea/modules.xml
-*/.idea/vcs.xml
+.idea/TableViewEx.iml
+.idea/inspectionProfiles/
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
