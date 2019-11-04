@@ -16,7 +16,12 @@ class Mytable(QtWidgets.QTableView):
         self.setSizePolicy(sizePolicy)
         self.verticalHeader().setVisible(False)
         self.resized.connect(self.resizing)
-        self.horizontalHeader().setDefaultSectionSize(5)
+        self.horizontalHeader().setDefaultSectionSize(500)
+        # print(self.styleSheet())
+
+        #todo da reimplementare
+        # self.setStyleSheet("QHeaderView { background-color:lightGray }")
+
         # self.horizontalHeader().setStretchLastSection(True)
         # self.setMinimumSize(QtCore.QSize(600, 480))
         # self.setMaximumHeight(500)
@@ -73,7 +78,7 @@ class MyDialog(QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('TableView v 0.1')
-        self.setMinimumSize(QtCore.QSize(540, 500))
+        self.setMinimumSize(QtCore.QSize(int(680*1.5), int(600*1.5)))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
@@ -85,6 +90,7 @@ class MyModel(QtCore.QAbstractTableModel):
         if oggi is None:
             oggi = QtCore.QDate().currentDate()
         self._oggi = oggi
+        self.date = GiorniDelMese.sendList(self._oggi)
         self.currentDate = self.setCurrentDate(oggi)
 
 
@@ -93,14 +99,15 @@ class MyModel(QtCore.QAbstractTableModel):
 
     def data(self, index: QtCore.QModelIndex, role: int = ...):
         try:
-            date = GiorniDelMese.sendList(self._oggi)
+            self.date = GiorniDelMese.sendList(self._oggi)
             row = index.row()
             col = index.column()
-            dato = date[col][row].day()
+            dato = self.date[col][row].day()
             if role == QtCore.Qt.DisplayRole:
                return dato
             elif role == QtCore.Qt.TextAlignmentRole:
-               return QtCore.Qt.AlignHCenter
+               # return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom
+               return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
         except:
             print(fex())
     def data_old(self, index: QtCore.QModelIndex, role: int = ...) :
@@ -130,12 +137,25 @@ class MyModel(QtCore.QAbstractTableModel):
         return 7
 
     def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = ...) :
-        giorno = self._oggi
-        nomeGiorno = giorno.shortDayName(giorno.dayOfWeek())
+        try:
+            giorno = self.date[0][section]
+            nomeGiorno = giorno.shortDayName(giorno.dayOfWeek())
+        except IndexError:
+            nomeGiorno = QtCore.QDate().shortDayName(7)
+
+        weekEnd = [QtCore.QDate().shortDayName(6), QtCore.QDate().shortDayName(7)]
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return nomeGiorno
 
+        if role == QtCore.Qt.ForegroundRole:
+            if nomeGiorno in weekEnd:
+                return QtGui.QColor(QtCore.Qt.red)
+
+        #   NON DA ERRORE MA NON FUNZIONA PER IL BACKGROUND
+        if role == QtCore.Qt.BackgroundColorRole:
+            # if nomeGiorno in weekEnd:
+            return QtGui.QColor(QtCore.Qt.green)
 
 
     def setCurrentDate(self,dato: QtCore.QDate = ...) -> QtCore.QDate:
