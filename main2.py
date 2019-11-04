@@ -5,35 +5,79 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import sys
 from collections import OrderedDict as Od
 from traceback import format_exc as fex
+from gui import Ui_Dialog as MyDialog2
 
 
 class Mytable(QtWidgets.QTableView):
+    resized = QtCore.pyqtSignal()
     def __init__(self,parent=None):
         super(Mytable, self).__init__(parent)
-        self.setMaximumHeight(300)
-        self.setMaximumWidth(300)
-        self.setMinimumHeight(300)
-        self.setMinimumWidth(300)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.setSizePolicy(sizePolicy)
+        self.verticalHeader().setVisible(False)
+        self.resized.connect(self.resizing)
+        self.horizontalHeader().setDefaultSectionSize(5)
+        # self.horizontalHeader().setStretchLastSection(True)
+        # self.setMinimumSize(QtCore.QSize(600, 480))
+        # self.setMaximumHeight(500)
+        # self.setMaximumWidth(500)
+        # self.setMinimumHeight(300)
+        # self.setMinimumWidth(300)
+    def resizing(self):
+        # secSizeW = int(self.parent().size().width() / self.ro
+        print('#########  children')
 
+        try:
+            # print(int(self.horizontalHeader().size().width()/7))
+            # print(self.rowHeight(1))
+            # print(self.columnWidth(1))
+            # colWid = int(self.horizontalHeader().size().width() / 7)
+            colWid = int(self.parent().size().width() / 7)-4
+            self.horizontalHeader().setDefaultSectionSize(colWid)
+            # self.horizontalHeader().setMaximumWidth(int(self.parent().size().width() / 7))
+            rowH = colWid*7 - (self.horizontalHeader().height()-(self.horizontalHeader().defaultSectionSize()*2))
+            # rowH = colWid*7 - (self.horizontalHeader().height()-(self.horizontalHeader().defaultSectionSize()*2))
+            print('colwidth ', colWid)
+            print('rowH ', rowH)
+            print('horizontal header height',self.horizontalHeader().height())
+            print('vertical count',self.verticalHeader().count())
+
+            self.verticalHeader().setDefaultSectionSize(colWid)
+            self.verticalHeader().count()
+            self.resize(QtCore.QSize(colWid*7+2, colWid*6+25))
+
+        except:
+            print(fex())
+        print('######### end children')
+
+
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.verticalHeader().setSizePolicy(sizePolicy)
+    def resizeEvent(self, event):
+        self.resized.emit()
+        return super(Mytable, self).resizeEvent(event)
 
 class MyWid(QtWidgets.QWidget):
     def __init__(self,parent=None):
         super(MyWid, self).__init__(parent)
-        self.setMaximumHeight(350)
-        self.setMaximumWidth(350)
-        self.setMinimumHeight(300)
-        self.setMinimumWidth(300)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.setSizePolicy(sizePolicy)
+        # self.setMinimumSize(QtCore.QSize(600, 480))
+        # self.setMaximumHeight(500)
+        # self.setMaximumWidth(500)
+        # self.setMinimumHeight(300)
+        # self.setMinimumWidth(300)
 
 
 class MyDialog(QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('TableView v 0.1')
-        self.setMaximumHeight(400)
-        self.setMaximumWidth(400)
-        self.setMinimumHeight(350)
-        self.setMinimumWidth(350)
-
+        self.setMinimumSize(QtCore.QSize(540, 500))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
+        self.setSizePolicy(sizePolicy)
 
 class MyModel(QtCore.QAbstractTableModel):
     def __init__(self, oggi=None, parent=None):
@@ -42,6 +86,8 @@ class MyModel(QtCore.QAbstractTableModel):
             oggi = QtCore.QDate().currentDate()
         self._oggi = oggi
         self.currentDate = self.setCurrentDate(oggi)
+
+
 
 
 
@@ -215,40 +261,40 @@ class GiorniDelMese(QtCore.QObject):
 class Main(MyDialog):
     def __init__(self,parent=None):
         super(Main, self).__init__(parent)
-        self.mainWid = MyWid(self)
+        # self.mainWid = MyWid(self)
         # self.table = Mytable(self.mainWid)
+        self.tableView = Mytable(self)
         self.settaData()
-        hBox = QtWidgets.QHBoxLayout()
-        hBox.addWidget(self.mainWid)
-        self.setLayout(hBox)
-        hBox = QtWidgets.QHBoxLayout()
+        # self.tableView.resized.connect(self.resizing)
+        hBox1 = QtWidgets.QHBoxLayout()
+        hBox1.addWidget(self.tableView)
+        # # self.mainWid.setLayout(hBox1)
+        # hBox = QtWidgets.QHBoxLayout()
+        # # hBox.addWidget(self.mainWid)
+        self.setLayout(hBox1)
+        self.modellogiorni(self.oggi)
+        # self.tableView.size()
 
-        self.table = QtWidgets.QTreeView(self.mainWid)
-        model = QtGui.QStandardItemModel(self.table)
-
-        # AGGIUNTA COMBOBOX
-        ############################################################################################################
-        self.table.setModel(model)
-
-        combobox = QtWidgets.QComboBox()
-        combobox.addItems(['a','b','c'])
-
-        child1 = QtGui.QStandardItem('test1')
-        child2 = QtGui.QStandardItem('test2')
-        child3 = QtGui.QStandardItem('test3')
-        model.appendRow([child1, child2, child3])
-        a = model.index(0, 2)
-        self.table.setIndexWidget(a, combobox)
-        ############################################################################################################
         # self.settingTable()
-        # self.modellogiorni(self.oggi)
-        hBox.addWidget(self.table)
-        self.mainWid.setLayout(hBox)
+
+        print(self.tableView.size())
+        print('prima:',self.size())
+        # newSize = QtCore.QSize(self.mainWid.size().height()+150, self.mainWid.size().width()+150)
+        # self.resize(newSize)
+        # self.setMinimumSize(newSize)
+        # print('dopo:',self.size())
+
+    def resizing(self):
+        newsize = QtCore.QSize(self.tableView.size().width()+100, self.tableView.size().height()+10)
+        self.resize(newsize)
+        print("dopo",self.size())
 
     def settingTable(self):
         # self.table.horizontalHeader().setVisible(False)
-        self.table.verticalHeader().setVisible(False)
-        self.table
+        # self.table.verticalHeader().setVisible(False)
+        quadrato = 50
+        # self.table.verticalHeader().setDefaultSectionSize(quadrato)
+        # self.table.horizontalHeader().setDefaultSectionSize(quadrato)
 
     def settaData(self,data=QtCore.QDate().currentDate()) -> QtCore.QDate():
         d = QtCore.QDate().currentDate()
@@ -284,7 +330,7 @@ class Main(MyDialog):
         dati = GiorniDelMese.sendDict(oggi)
         try:
             model = MyModel(oggi=oggi, parent=self)
-            self.table.setModel(model)
+            self.tableView.setModel(model)
         except:
             print(fex())
 
