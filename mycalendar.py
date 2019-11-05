@@ -8,6 +8,7 @@ from traceback import format_exc as fex
 class Mytable(QtWidgets.QTableView):
     resized = QtCore.pyqtSignal()
     cellClickedMyTable = QtCore.pyqtSignal(QtCore.QDate)
+    whoIsComing = QtCore.pyqtSignal(QtWidgets.QWidget)
     def __init__(self,parent=None):
         super(Mytable, self).__init__(parent)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -47,6 +48,16 @@ class Mytable(QtWidgets.QTableView):
         self.resized.emit()
         return super(Mytable, self).resizeEvent(event)
 
+    def setModel(self, model: QtCore.QAbstractItemModel) -> None:
+        # self.whoIsComing.emit(self)
+        model.setFromList(self)
+        super(Mytable, self).setModel(model)
+
+    def update(self) -> None:
+        print(self.objectName())
+        self.whoIsComing.emit(self)
+        super(Mytable, self).update(self)
+
 
 class MyDialog(QtWidgets.QDialog):
     def __init__(self,parent=None):
@@ -59,8 +70,25 @@ class MyDialog(QtWidgets.QDialog):
         self.setSizePolicy(sizePolicy)
 
 class MyModel(QtCore.QAbstractTableModel):
+
+    listaMesi = ['Gennaio',
+                 'Febbraio',
+                 'Marzo',
+                 'Aprile',
+                 'Maggio',
+                 'Giugno',
+                 'Luglio',
+                 'Agosto',
+                 'Settembre',
+                 'Ottobre',
+                 'Novembre',
+                 'Dicembre']
+
     def __init__(self, oggi=None, parent=None):
         super(MyModel, self).__init__(parent)
+        print(self.parent().objectName())
+        self.roleNames()
+        self.fromList = []
         if oggi is None:
             oggi = QtCore.QDate().currentDate()
         self._oggi = oggi
@@ -69,29 +97,71 @@ class MyModel(QtCore.QAbstractTableModel):
         self.currentDate = self.setCurrentDate(oggi)
 
 
+
     def getCurrentSelected(self, index):
         pass
 
+    def itsMe(self,me):
+        self.me = me
+        print('its me, ',me)
+        return self.me
 
+    def setFromList(self,who):
+        if who not in self.fromList:
+            self.fromList.append(who)
+            who.whoIsComing.connect(self.itsMe)
+            print(who,' added')
     def setCurrentDate(self,dato: QtCore.QDate = ...) -> QtCore.QDate:
         self.currentDate = dato
         return  self.currentDate
 
     def data(self, index: QtCore.QModelIndex, role: int = ...):
         try:
-
             row = index.row()
             col = index.column()
-            dato = self.date[col][row].day()
+            # print("type parent ", type(self.fromWho))
+            # for w in self.fromList:
+            w = 0
+            # w = self.me
+            if role == QtCore.QByteArray(b'peppe'):
+                pass
+                # print('peppe!!!',index.isValid())
+                # # mese = self.date[col][row].month()
+                # mese = self.currentDate.month()
+                # dato = self.listaMesi[mese]
+                # print(dato.upper())
+                # return dato
+            # else:
+            #     dato = self.date[col][row].day()
+
             if role == QtCore.Qt.DisplayRole:
-               return dato
+                if col == 12:
+                    mese = self.currentDate.month()
+                    dato = self.listaMesi[mese-1]
+                    print(dato.upper())
+                    print('dato', row, col)
+                else:
+                    dato = self.date[row][col].day()
+
+                return dato
 
             elif role == QtCore.Qt.TextAlignmentRole:
-               # return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom
-               return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
 
+               # return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom
+                return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
+
+        # except AttributeError:
+        #     pass
+        # except IndexError:
+        #     mese = self.currentDate.month()
+        #     dato = self.listaMesi[mese]
+        #     print(dato.upper())
+        #     return dato
         except:
             print(fex())
+            print()
+            print()
+            print(row,col)
 
     def flags(self, index: QtCore.QModelIndex):
         try:
@@ -128,6 +198,15 @@ class MyModel(QtCore.QAbstractTableModel):
             brush = QtGui.QBrush(color)
             return brush
 
+    def lastRoleName(self) -> int:
+        last = max([r for r in self.roleNames.keys()])
+        return last
+
+    def setRoleNames(self,roleName):
+        last = self.lastRoleName() + QtCore.Qt.UserRole
+        self.roleNames()[last] = roleName
+
+
 
 class GiorniDelMese(QtCore.QObject):
     def __init__(self,data:QtCore.QDate):
@@ -139,8 +218,8 @@ class GiorniDelMese(QtCore.QObject):
         """ la lista deve essere [ [] ]
             la tabella sempre piena, quindi rows = 6 ; cols = 7
             il primo giorno deve essere un lunedì"""
-        rows = 6
-        cols = 7
+        rows = 7
+        cols = 6
         primoDelMese = QtCore.QDate(dataDaLavorare.year(), dataDaLavorare.month(), 1)
         lun = GiorniDelMese.iLunedi(primoDelMese)[0]
         corrente = lun
@@ -150,6 +229,7 @@ class GiorniDelMese(QtCore.QObject):
             for r in range(rows):
                 listaGiorni[c].append(corrente)
                 corrente = corrente.addDays(1)
+        print(listaGiorni)
         return listaGiorni
 
     @staticmethod
@@ -232,6 +312,7 @@ class MyCalendarCore(QtWidgets.QWidget):
 
     def __init__(self,parent=None):
         super(MyCalendarCore, self).__init__(parent)
+        self.setObjectName('MyCalendarCore')
         self.setMinimumSize(QtCore.QSize(int(680 * 1.5), int(600 * 1.5)))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
@@ -242,17 +323,23 @@ class MyCalendarCore(QtWidgets.QWidget):
         hBox1 = QtWidgets.QHBoxLayout()
         hBox1.addWidget(self.tableView)
         self.setLayout(hBox1)
-        self.modellogiorni(self.oggi)
+        # self.modellogiorni(self.oggi)
         self.tableView.cellClickedMyTable.connect(lambda x:self.cellClicked.emit(x))
 
     def settaData(self,data=QtCore.QDate().currentDate()) -> QtCore.QDate():
-        d = QtCore.QDate().currentDate()
-        d.daysInMonth()
+        data.daysInMonth()
         self.oggi = data
         return self.oggi
+    def setDataView(self, data:QtCore.QDate()= ...) -> QtCore.QDate():
+        self.dataView = data
+        return self.dataView
 
-    def mese(self, dt: QtCore.QDate = ...) -> int:
-        return dt.month()
+    def nextMonth(self):
+        year =self.oggi.year()
+        daysInMonth = self.oggi.daysInMonth()
+        nextMonth = self.oggi.addDays(daysInMonth - self.oggi.day()+1)
+        print(nextMonth)
+        self.settaData(nextMonth)
 
     def modellogiorni(self, oggi):
         lista = GiorniDelMese.sendList(oggi)
@@ -266,12 +353,32 @@ class MyCalendarCore(QtWidgets.QWidget):
     def modelloOggi(self):
         return MyModel(oggi=self.oggi, parent=self)
 
+    def modelloOnTheRun(self,model,dati):
+        self.tableView.setModel(model(oggi=dati,parent=self))
+
+
+
+
 
 if __name__ == '__main__':
+    from combosenzafreccia import ComboSenzaFreccia
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle('fusion')
     ui = QtWidgets.QDialog()
     cal = MyCalendarCore(ui)
-
+    model = MyModel(oggi=QtCore.QDate().currentDate(), parent=ui)
+    cal.tableView.setModel(model)
+    combo = ComboSenzaFreccia(ui)
+    # combo = QtWidgets.QComboBox(ui)
+    combo.setObjectName('comboBox')
+    combo.setModel(model)
+    hbox = QtWidgets.QVBoxLayout()
+    hbox.addWidget(combo)
+    hbox.addWidget(cal)
+    ui.setLayout(hbox)
+    bot = QtWidgets.QPushButton('click me')
+    bot.clicked.connect(cal.nextMonth)
+    combo.setRole()
     ui.show()
+    bot.show()
     sys.exit(app.exec_())
