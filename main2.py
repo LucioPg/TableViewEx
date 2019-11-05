@@ -1,15 +1,13 @@
 ### PROVO A MANDARE SOLO LA DATA DI OGGI, IL RESTO LO LASCIO FARE AL MODELLO
 
-
 from PyQt5 import QtWidgets, QtCore, QtGui
 import sys
-from collections import OrderedDict as Od
 from traceback import format_exc as fex
-from gui import Ui_Dialog as MyDialog2
 
 
 class Mytable(QtWidgets.QTableView):
     resized = QtCore.pyqtSignal()
+    cellClickedMyTable = QtCore.pyqtSignal(QtCore.QDate)
     def __init__(self,parent=None):
         super(Mytable, self).__init__(parent)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -17,44 +15,44 @@ class Mytable(QtWidgets.QTableView):
         self.verticalHeader().setVisible(False)
         self.resized.connect(self.resizing)
         self.horizontalHeader().setDefaultSectionSize(500)
-        # print(self.styleSheet())
+        self.horizontalHeader().setMinimumHeight(30)
+        font = QtGui.QFont('Arial', 20)
+        font2 = QtGui.QFont('Arial', 17)
+        self.horizontalHeader().setFont(font2)
+        self.setFont(font)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        # self.doubleClicked.connect(self.dClick)
+        self.clicked.connect(self.dClick)
 
-        #todo da reimplementare
-        # self.setStyleSheet("QHeaderView { background-color:lightGray }")
+    def dClick(self,ind):
+        data = self.model().date[ind.row()][ind.column()]
+        self.cellClickedMyTable.emit(data)
+        return data
 
-        # self.horizontalHeader().setStretchLastSection(True)
-        # self.setMinimumSize(QtCore.QSize(600, 480))
-        # self.setMaximumHeight(500)
-        # self.setMaximumWidth(500)
-        # self.setMinimumHeight(300)
-        # self.setMinimumWidth(300)
+
+                # return self.mouseDoubleClickEvent(e)
+        # self.setStyleSheet("""QHeaderView::section::middle { background-color:lightGray; border-left:1px solid black;}
+        # QHeaderView::section::first { background-color:lightGray; border:0px;}""")
+
+#         self.setStyleSheet("""QHeaderView::section {
+#     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+#                                       stop:0 #616161, stop: 0.5 #505050,
+#                                       stop: 0.6 #434343, stop:1 #656565);
+#     color: white;
+#     border: 1px solid #6c6c6c;
+# }""")
+
     def resizing(self):
-        # secSizeW = int(self.parent().size().width() / self.ro
-        print('#########  children')
-
         try:
-            # print(int(self.horizontalHeader().size().width()/7))
-            # print(self.rowHeight(1))
-            # print(self.columnWidth(1))
-            # colWid = int(self.horizontalHeader().size().width() / 7)
             colWid = int(self.parent().size().width() / 7)-4
             self.horizontalHeader().setDefaultSectionSize(colWid)
-            # self.horizontalHeader().setMaximumWidth(int(self.parent().size().width() / 7))
-            rowH = colWid*7 - (self.horizontalHeader().height()-(self.horizontalHeader().defaultSectionSize()*2))
-            # rowH = colWid*7 - (self.horizontalHeader().height()-(self.horizontalHeader().defaultSectionSize()*2))
-            print('colwidth ', colWid)
-            print('rowH ', rowH)
-            print('horizontal header height',self.horizontalHeader().height())
-            print('vertical count',self.verticalHeader().count())
-
             self.verticalHeader().setDefaultSectionSize(colWid)
             self.verticalHeader().count()
-            self.resize(QtCore.QSize(colWid*7+2, colWid*6+25))
+            self.resize(QtCore.QSize(colWid*7+3, colWid*6+34))
 
         except:
             print(fex())
-        print('######### end children')
-
 
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.verticalHeader().setSizePolicy(sizePolicy)
@@ -62,16 +60,12 @@ class Mytable(QtWidgets.QTableView):
         self.resized.emit()
         return super(Mytable, self).resizeEvent(event)
 
+
 class MyWid(QtWidgets.QWidget):
     def __init__(self,parent=None):
         super(MyWid, self).__init__(parent)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
-        # self.setMinimumSize(QtCore.QSize(600, 480))
-        # self.setMaximumHeight(500)
-        # self.setMaximumWidth(500)
-        # self.setMinimumHeight(300)
-        # self.setMinimumWidth(300)
 
 
 class MyDialog(QtWidgets.QDialog):
@@ -90,36 +84,32 @@ class MyModel(QtCore.QAbstractTableModel):
         if oggi is None:
             oggi = QtCore.QDate().currentDate()
         self._oggi = oggi
+        # self.date = GiorniDelMese.sendList(self._oggi)
         self.date = GiorniDelMese.sendList(self._oggi)
         self.currentDate = self.setCurrentDate(oggi)
 
 
+    def getCurrentSelected(self, index):
+        pass
 
 
+    def setCurrentDate(self,dato: QtCore.QDate = ...) -> QtCore.QDate:
+        self.currentDate = dato
+        return  self.currentDate
 
     def data(self, index: QtCore.QModelIndex, role: int = ...):
         try:
-            self.date = GiorniDelMese.sendList(self._oggi)
+
             row = index.row()
             col = index.column()
             dato = self.date[col][row].day()
             if role == QtCore.Qt.DisplayRole:
                return dato
+
             elif role == QtCore.Qt.TextAlignmentRole:
                # return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom
                return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
-        except:
-            print(fex())
-    def data_old(self, index: QtCore.QModelIndex, role: int = ...) :
-        try:
-            row = index.row()
-            col = index.column()
-            dato = self._days[col+1][row].day()
-            if role == QtCore.Qt.DisplayRole:
-                return dato
-            elif role == QtCore.Qt.TextAlignmentRole:
-                return QtCore.Qt.AlignHCenter
-        except IndexError: pass
+
         except:
             print(fex())
 
@@ -136,7 +126,7 @@ class MyModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
         return 7
 
-    def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = ...) :
+    def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = ...):
         try:
             giorno = self.date[0][section]
             nomeGiorno = giorno.shortDayName(giorno.dayOfWeek())
@@ -150,17 +140,14 @@ class MyModel(QtCore.QAbstractTableModel):
 
         if role == QtCore.Qt.ForegroundRole:
             if nomeGiorno in weekEnd:
+
                 return QtGui.QColor(QtCore.Qt.red)
 
-        #   NON DA ERRORE MA NON FUNZIONA PER IL BACKGROUND
-        if role == QtCore.Qt.BackgroundColorRole:
-            # if nomeGiorno in weekEnd:
-            return QtGui.QColor(QtCore.Qt.green)
+        if role == QtCore.Qt.BackgroundRole: # necessario   CAMBIARE QAPPLICATION.SETSTYLE("FUSION")
+            color = QtGui.QColor('darkGray')
+            brush = QtGui.QBrush(color)
+            return brush
 
-
-    def setCurrentDate(self,dato: QtCore.QDate = ...) -> QtCore.QDate:
-        self.currentDate = dato
-        return  self.currentDate
 
 class GiorniDelMese(QtCore.QObject):
     def __init__(self,data:QtCore.QDate):
@@ -184,7 +171,7 @@ class GiorniDelMese(QtCore.QObject):
                 listaGiorni[c].append(corrente)
                 corrente = corrente.addDays(1)
         return listaGiorni
-        # listaGiorni = [[for r in range(rows)] for c in range(cols)]
+
     @staticmethod
     def sendList_old(dataDaLavorare) -> list:
         giorniLista = [d for d in dataDaLavorare.daysInMont()]
@@ -193,7 +180,6 @@ class GiorniDelMese(QtCore.QObject):
     @staticmethod
     def sendDict_old(dataDaLavorare) -> dict:
         tot = dataDaLavorare.daysInMonth()
-        primoDelMese = QtCore.QDate(dataDaLavorare.year(),dataDaLavorare.month(),1)
         giorniLista = [d for d in range(1,tot+1)]
         def colDict(lista=[]):
             """deve ritornare un dizionario"""
@@ -202,24 +188,18 @@ class GiorniDelMese(QtCore.QObject):
             diz = {}
             while len(listaCopiata):
                 try:
-                    # print('len listaCopiata: ', len(listaCopiata))
                     listaTroncata = listaCopiata[:7]
-                    # print('listaTroncata: ', listaTroncata)
                     for x in listaTroncata:
                         ind = listaCopiata.index(x)
-                        # print('valore: ', x, ' indice: ', ind)
                         if x not in listaTemp:
                             estratto = listaCopiata.pop(ind)
-                            # print('estratto: ', estratto)
                             chiave = estratto % 7
                             if chiave == 0:
                                 chiave = 7
                             if chiave not in diz.keys():
                                 diz[chiave] = []
-                            # print('             chiave: ', chiave)
                             listaTemp.append(estratto)
                             diz[chiave].append(estratto)
-
                 except:
                     print(fex())
             return diz
@@ -230,9 +210,7 @@ class GiorniDelMese(QtCore.QObject):
         def getQDate(giorno):
             return QtCore.QDate(dataDaLavorare.year(), dataDaLavorare.month(), giorno)
         tot = dataDaLavorare.daysInMonth()
-        primoDelMese = QtCore.QDate(dataDaLavorare.year(), dataDaLavorare.month(), 1)
         giorniLista = [getQDate(d) for d in range(1, tot + 1)]
-        # giorniLista = [d for d in range(1, tot + 1)]
 
         def colDict(lista=[]):
             """deve ritornare un dizionario"""
@@ -241,22 +219,17 @@ class GiorniDelMese(QtCore.QObject):
             diz = {}
             while len(listaCopiata):
                 try:
-                    # print('len listaCopiata: ', len(listaCopiata))
                     listaTroncata = listaCopiata[:7]
-                    # print('listaTroncata: ', listaTroncata)
                     for x in listaTroncata:
                         ind = listaCopiata.index(x)
-                        # print('valore: ', x, ' indice: ', ind)
                         if x not in listaTemp:
                             estratto = listaCopiata.pop(ind)
-                            # print('estratto: ', estratto)
                             estrattoInt = estratto.day()
                             chiave = estrattoInt % 7
                             if chiave == 0:
                                 chiave = 7
                             if chiave not in diz.keys():
                                 diz[chiave] = []
-                            # print('             chiave: ', chiave)
                             listaTemp.append(estratto)
                             diz[chiave].append(estratto)
 
@@ -279,68 +252,24 @@ class GiorniDelMese(QtCore.QObject):
         return (lunediPrec, lunediSucc,)
 
 class Main(MyDialog):
+    cellClicked = QtCore.pyqtSignal(QtCore.QDate)
+
+
     def __init__(self,parent=None):
         super(Main, self).__init__(parent)
-        # self.mainWid = MyWid(self)
-        # self.table = Mytable(self.mainWid)
         self.tableView = Mytable(self)
         self.settaData()
-        # self.tableView.resized.connect(self.resizing)
         hBox1 = QtWidgets.QHBoxLayout()
         hBox1.addWidget(self.tableView)
-        # # self.mainWid.setLayout(hBox1)
-        # hBox = QtWidgets.QHBoxLayout()
-        # # hBox.addWidget(self.mainWid)
         self.setLayout(hBox1)
         self.modellogiorni(self.oggi)
-        # self.tableView.size()
-
-        # self.settingTable()
-
-        print(self.tableView.size())
-        print('prima:',self.size())
-        # newSize = QtCore.QSize(self.mainWid.size().height()+150, self.mainWid.size().width()+150)
-        # self.resize(newSize)
-        # self.setMinimumSize(newSize)
-        # print('dopo:',self.size())
-
-    def resizing(self):
-        newsize = QtCore.QSize(self.tableView.size().width()+100, self.tableView.size().height()+10)
-        self.resize(newsize)
-        print("dopo",self.size())
-
-    def settingTable(self):
-        # self.table.horizontalHeader().setVisible(False)
-        # self.table.verticalHeader().setVisible(False)
-        quadrato = 50
-        # self.table.verticalHeader().setDefaultSectionSize(quadrato)
-        # self.table.horizontalHeader().setDefaultSectionSize(quadrato)
+        self.tableView.cellClickedMyTable.connect(lambda x:self.cellClicked.emit(x))
 
     def settaData(self,data=QtCore.QDate().currentDate()) -> QtCore.QDate():
         d = QtCore.QDate().currentDate()
         d.daysInMonth()
         self.oggi = data
-        print('********test*********')
-        print(self.oggi.shortDayName(self.oggi.dayOfWeek()))
-        print('******** fine test*********')
         return self.oggi
-
-    def getAllDates(self, annoIniziale:QtCore.QDate().currentDate().year()):
-        dataOggi = QtCore.QDate().currentDate()
-        annoFinale = annoIniziale + 10
-        mesi = dataOggi.daysInMonth()
-
-    # def giorni_nel_mese(self,dt=QtCore.QDate().currentDate()) -> list:
-    #     lista = [d for d in range(dt.daysInMonth()+1)]
-    #     giorni = []
-    #     diz = {colonna:giorni for colonna, giorni in zip(range(lista),lista)}
-    #     for colonna, giorni in zip(range(lista), lista):
-    #
-    #     for giorno in lista:
-    #         if giorno % 7:
-    #             pass
-    #     diz = Od(diz)
-    #     return diz
 
     def mese(self, dt: QtCore.QDate = ...) -> int:
         return dt.month()
@@ -354,15 +283,14 @@ class Main(MyDialog):
         except:
             print(fex())
 
-    def modellogiorni_old(self, *args, **kwargs):
-        return MyModel(oggi=kwargs, parent=self)
-
     def modelloOggi(self):
         return MyModel(oggi=self.oggi, parent=self)
 
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+    app.setStyle('fusion')
     ui = Main()
     ui.show()
+
     sys.exit(app.exec_())
