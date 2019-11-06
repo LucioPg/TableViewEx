@@ -162,7 +162,7 @@ class MeseGiorniDictGen(QObject):
             for r in range(rows):
                 listaGiorni[c].append(corrente)
                 corrente = corrente.addDays(1)
-        print(listaGiorni)
+        # print(listaGiorni)
         return listaGiorni
 
 

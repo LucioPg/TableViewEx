@@ -25,7 +25,7 @@ class ComboSenzaFreccia(QtWidgets.QComboBox):
             painter = QtWidgets.QStylePainter(self)
             painter.setPen(QtCore.Qt.white)
             font = QtGui.QFont('Arial', 17,)
-            painter.setFont(self.font())
+            painter.setFont(font)
             option = QtWidgets.QStyleOptionComboBox()
             self.initStyleOption(option)
             painter.drawComplexControl(QtWidgets.QStyle.CC_ComboBox, option)
