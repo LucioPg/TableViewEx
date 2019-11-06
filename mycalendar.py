@@ -8,7 +8,7 @@ from PyQt5.QtCore import (QDate, QObject, pyqtSignal, QSize, QAbstractItemModel,
 from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView, QHBoxLayout, QDialog, QPushButton,
                              QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QLineEdit,QApplication, QLabel)
 from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem)
-
+from meseGiorniDictGen import MeseGiorniDictGen
 
 class MyCalendarCore(QWidget):
     cellClicked = pyqtSignal(QDate)
@@ -114,6 +114,18 @@ class Mytable(QTableView):
         self.whoIsComing.emit(self)
         super(Mytable, self).update(self)
 class MyDialog(QDialog):
+    listaMesi = ['Gennaio',
+                 'Febbraio',
+                 'Marzo',
+                 'Aprile',
+                 'Maggio',
+                 'Giugno',
+                 'Luglio',
+                 'Agosto',
+                 'Settembre',
+                 'Ottobre',
+                 'Novembre',
+                 'Dicembre']
     def __init__(self,parent=None):
         super(MyDialog, self).__init__(parent)
         self.datas()
@@ -126,7 +138,10 @@ class MyDialog(QDialog):
 
 
     def datas(self):
-        self.kinds = ['vegetale', 'animale']
+        # self.pagine = ['vegetale', 'animale']
+        self.oggi = QDate().currentDate()
+        self.pagine = MeseGiorniDictGen.genDict(self.oggi,num=True)
+
 
     def selfSetUp(self):
         self.setWindowTitle('TableView v 0.2')
@@ -215,24 +230,30 @@ class MyDialog(QDialog):
 
     def setUpModels(self):
         ## sono gli items che devo essere nella combo (es: i mesi)
-        items = ['cane', 'gatto', 'melo', 'pero']
+        # items = ['cane', 'gatto', 'melo', 'pero']
+        items = self.listaMesi
         #i numeri 4 e 2 passati come argomenti per il modello base indicano le righe e le colonne del modello
-        # basate sulla len di items e di self.kinds
-        self.model = QStandardItemModel(4, 2, self)
+        # basate sulla len di items e di self.pagine
+        self.model = QStandardItemModel(len(items), len(items), self)
         # questo è il modello passato alla combo, che ha come elementi gli items
         self.typeModel = QStringListModel(items, self)
         # self.typeModel.dataChanged.connect(self.typeModel.setData(self.typeModel.index(),Qt.AlignCenter, Qt.TextAlignmentRole))
-        print(self.typeModel.roleNames())
         self.combo.setModel(self.typeModel)
-        # a ogni elemento di items deve corrispondere un valore, self.kinds, ricavato dall'indice
-        types = ("1", "1", "0", "0")
+        # a ogni elemento di items deve corrispondere un valore, self.pagine, ricavato dall'indice
+        # types = ("1", "1", "0", "0")
+        typesList = [str(x) for x in range(1,13)]
+        types = tuple(typesList)
         # per ogni item viene assegnato il valore nel modello matrice
         # la mappatura ha nella colonna 0 la combobox e gli viene assegnato un item
-        # alla colonna 1 del modello viene assegnato il riferimento a self.kinds passato attraverso types
+        # alla colonna 1 del modello viene assegnato il riferimento a self.pagine passato attraverso types
         for row, item in enumerate(items):
             self.model.setItem(row, 0, QStandardItem(item))
-            QStandardItem()
-            self.model.setItem(row, 1, QStandardItem(self.kinds[int(types[row])]))
+
+            # self.model.setItem(row, 1, QStandardItem(self.pagine[int(types[row])]))
+            print('+'*100)
+            print(self.pagine[row])
+            print('+'*100)
+            self.model.setItem(row, 1, QStandardItem(types[row]))
             # self.model.setItem(row, 1, QStandardItem(types[row]))
         # for row, col in enumerate()
         # self.combo.setEditable(False)

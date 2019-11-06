@@ -124,12 +124,15 @@ class MeseGiorniDictGen(QObject):
         self._oggi = oggi
 
     @staticmethod
-    def genDict(oggi: QDate = ...) -> dict:
+    def genDict(oggi: QDate = ...,num=False) -> dict:
         dizAnno = {}
         for m in range(1, 13):
             primoDellAnno = QDate(oggi.year(), m, 1)
             lista = MeseGiorniDictGen.sendList(primoDellAnno)
-            dizAnno[MeseGiorniDictGen.listaMesi[m-1]] = lista
+            if not num:
+                dizAnno[MeseGiorniDictGen.listaMesi[m-1]] = lista
+            else:
+                dizAnno[m-1] = lista
         return dizAnno
 
     @staticmethod

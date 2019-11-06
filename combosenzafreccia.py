@@ -15,30 +15,17 @@ class ComboSenzaFreccia(QtWidgets.QComboBox):
         self.setObjectName("comboSenzaFreccia")
         # self.setEditable(True)
         # self.lineEdit().setReadOnly(True)
-        self.currentIndexChanged.connect(self.setAlign)
+        # self.currentIndexChanged.connect(self.setAlign)
+    def setUpFont(self,font=QtGui.QFont('Arial', 17,)):
+        self.setFont(font)
 
     def paintEvent(self, e: QtGui.QPaintEvent) -> None:
         try:
-            # painter = QtGui.QPainter(self)
-            #
-            # painter.setPen(QtCore.Qt.blue)
-            # painter.setFont(QtGui.QFont("Arial", 10))
-            # opt = QtWidgets.QStyleOptionComboBox()
-            # self.initStyleOption(opt)
-            # testo = opt.currentText
-            #
-            # print('+++', testo)
-            # print('+++', opt.currentText)
 
-
-
-            #
-            #
-            #
             painter = QtWidgets.QStylePainter(self)
             painter.setPen(QtCore.Qt.white)
             font = QtGui.QFont('Arial', 17,)
-            painter.setFont(font)
+            painter.setFont(self.font())
             option = QtWidgets.QStyleOptionComboBox()
             self.initStyleOption(option)
             painter.drawComplexControl(QtWidgets.QStyle.CC_ComboBox, option)
