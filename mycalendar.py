@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView
                              QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QLineEdit,QApplication, QLabel)
 from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem)
 from meseGiorniDictGen import MeseGiorniDictGen
-
+from models import MyModel
 class MyCalendarCore(QWidget):
     cellClicked = pyqtSignal(QDate)
     def __init__(self,parent=None):
@@ -103,11 +103,11 @@ class Mytable(QTableView):
     def resizeEvent(self, event):
         self.resized.emit()
         return super(Mytable, self).resizeEvent(event)
-
-    def setModel(self, model: QAbstractItemModel) -> None:
-        # self.whoIsComing.emit(self)
-        model.setFromList(self)
-        super(Mytable, self).setModel(model)
+    #
+    # def setModel(self, model: QAbstractItemModel) -> None:
+    #     # self.whoIsComing.emit(self)
+    #     model.setFromList(self)
+    #     super(Mytable, self).setModel(model)
 
     def update(self) -> None:
         print(self.objectName())
@@ -163,6 +163,7 @@ class MyDialog(QDialog):
         # self.table.setFixedSize(labSize)
         self.table.setSizePolicy(sizePolicy)
         # self.table.sizePolicy().horizontalStretch()
+        self.combo = QComboBox()
         self.combo = ComboSenzaFreccia(self)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.combo.setSizePolicy(sizePolicy)
@@ -239,6 +240,9 @@ class MyDialog(QDialog):
         self.typeModel = QStringListModel(items, self)
         # self.typeModel.dataChanged.connect(self.typeModel.setData(self.typeModel.index(),Qt.AlignCenter, Qt.TextAlignmentRole))
         self.combo.setModel(self.typeModel)
+        #setto il modello per la tableView
+        self.tableModel = MyModel(self.pagine,parent=self)
+        self.table.setModel(self.tableModel)
         # a ogni elemento di items deve corrispondere un valore, self.pagine, ricavato dall'indice
         # types = ("1", "1", "0", "0")
         typesList = [str(x) for x in range(1,13)]
@@ -248,11 +252,6 @@ class MyDialog(QDialog):
         # alla colonna 1 del modello viene assegnato il riferimento a self.pagine passato attraverso types
         for row, item in enumerate(items):
             self.model.setItem(row, 0, QStandardItem(item))
-
-            # self.model.setItem(row, 1, QStandardItem(self.pagine[int(types[row])]))
-            print('+'*100)
-            print(self.pagine[row])
-            print('+'*100)
             self.model.setItem(row, 1, QStandardItem(types[row]))
             # self.model.setItem(row, 1, QStandardItem(types[row]))
         # for row, col in enumerate()
@@ -266,8 +265,9 @@ class MyDialog(QDialog):
         # self.mapper.addMapping(self.combo,0,b'currentIndex')
         self.mapper.addMapping(self.combo,0)
         self.mapper.currentIndexChanged.connect(self.updateButtons)
-        self.mapper.toFirst()
-
+        # self.mapper.toFirst()
+        # self.mapper.toLast()
+        self.mapper.setCurrentIndex(QDate().currentDate().month()-1)
     def setUpConnections(self):
         self.bot_next.clicked.connect(self.mapper.toNext)
         self.bot_prev.clicked.connect(self.mapper.toPrevious)
