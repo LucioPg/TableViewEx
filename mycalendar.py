@@ -93,8 +93,8 @@ class Mytable(QTableView):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
         # self.doubleClicked.connect(self.dClick)
-        self.clicked.connect(self.dClick)
-        self.sigModel.connect(lambda x: print('sig', x, self._mesi, self.model().setDate(x)))
+        self.clicked.connect(self.click)
+        self.sigModel.connect(lambda x: self.model().setDate(x))
         self.setModel(MyModel(self.pagine,parent=parent))
         self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
         # print('frame',self.frameRect(),'wid ', self.rect())
@@ -107,10 +107,12 @@ class Mytable(QTableView):
         self._mesi = m
         self.model()
 
-    def dClick(self,ind):
-        return
+    def click(self, ind):
+        # data = self.model().date[ind.row()][ind.column()]
+        data = self.model()._date[ind.row()][ind.column()]
+        print(data)
         self.cellClickedMyTable.emit(data)
-        return data
+        # return data
 
     def genSizes(self,m=150,M=200):
         size = m
@@ -181,7 +183,7 @@ class MyDialog(QWidget):
         self.setUpMapper()
         self.setUpConnections()
         self.setUpLayouts()
-
+        self.setCurrentDate(QDate().currentDate())
 
     def datas(self,annoNuovo: int=None):
         # self.pagine = ['vegetale', 'animale']
@@ -363,14 +365,10 @@ class MyDialog(QWidget):
         self.mapper.setCurrentIndex(QDate().currentDate().month()-1)
     def setUpConnections(self):
         self.resized.connect(self.tableAndComboResizing)
-        # self.bot_next.clicked.connect(self.mapper.toNext)
         self.bot_next.clicked.connect(self.toNext)
         self.bot_prev.clicked.connect(self.toPrevious)
-        try:
-            self.combo.currentIndexChanged.connect(lambda x: self.mapper.setCurrentIndex(x))
-            pass
-        except:
-            print(fex())
+        self.combo.currentIndexChanged.connect(lambda x: self.mapper.setCurrentIndex(x))
+        self.table.cellClickedMyTable.connect(self.setCurrentDate)
         # self.combo.currentIndexChanged.connect(lambda x: self.mapper.model().c)
 
     def toPrevious(self):
@@ -386,7 +384,6 @@ class MyDialog(QWidget):
             print(fex())
     def toNext(self):
         currentIndex = self.mapper.currentIndex()
-        print('toNext current',currentIndex)
         try:
             self.mapper.setCurrentIndex(currentIndex+1)
             afterIndex = self.mapper.currentIndex()
@@ -397,29 +394,15 @@ class MyDialog(QWidget):
         except:
             print(fex())
 
-    def updateButtons(self, row):
-        if row == 11:
-            print('anno nuovo')
-            # self.datas(self.oggi.year()+1)
-            # self.table.model()._mesi = self.pagine
-            # self.mapper.toFirst()
-        else: print(row)
-        # self.bot_prev.setEnabled(row > 0)
-        # self.bot_next.setEnabled(row < self.model.rowCount() - 1)
-        # print('mapper current index', self.mapper.currentIndex())
-        # print('combo current index', self.combo.currentIndex())
-        # # print('mapper model rows count', self.mapper.model().rowCount())
-        # print('-'*20)
+    def setCurrentDate(self,data):
+        self.currentDate = data
+        print(self.currentDate)
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         self.resized.emit()
     def tableAndComboResizing(self):
         sizeD = self.size().height()
         self.table.resizingFromParent(int(sizeD /8))
-        # tableWidth = self.table.size().width()
-        # botWid = self.bot_next.size().width() *2
-        # finalWid = tableWidth -botWid
-        # self.combo.setFixedWidth(finalWid)
 if __name__ == '__main__':
     from combosenzafreccia import ComboSenzaFreccia
     app = QApplication(sys.argv)
