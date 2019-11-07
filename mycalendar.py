@@ -7,7 +7,7 @@ from PyQt5.QtCore import (QDate, QObject, pyqtSignal, QSize, QAbstractItemModel,
                           QStringListModel, pyqtProperty)
 from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView, QHBoxLayout, QDialog, QPushButton,
                              QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QLineEdit,QApplication, QLabel, QFrame)
-from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem)
+from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem, QResizeEvent)
 from meseGiorniDictGen import MeseGiorniDictGen
 from models import MyModel
 class MyCalendarCore(QWidget):
@@ -97,7 +97,7 @@ class Mytable(QTableView):
         self.setModel(MyModel(self.pagine,parent=parent))
         self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
         # print('frame',self.frameRect(),'wid ', self.rect())
-        # self.resized.connect(self.resizing)
+        self.resized.connect(self.resizing)
         self._sizeSection = self.genSizes()
 
     def getMese(self):
@@ -117,21 +117,23 @@ class Mytable(QTableView):
             print('gen size ',size)
             size +=10
 
-    def resizingFromParent(self):
-        pass
+    def resizingFromParent(self,size):
+        self.verticalHeader().setDefaultSectionSize(size)
+        self.horizontalHeader().setDefaultSectionSize(size)
 
     def resizing(self,size=None):
 
         # print(type(_size))
         try:
             if size is None:
-                size =  next(self._sizeSection)
+                # size =  next(self._sizeSection)
+                size =  int(self.horizontalHeader().size().width()/7)
             print('resizing size:',size)
-            print('frame', self.frameRect(), 'wid ', self.rect())
-            self.horizontalHeader().setDefaultSectionSize(size)
+            # print('frame', self.frameRect(), 'wid ', self.rect())
+            # self.horizontalHeader().setDefaultSectionSize(size)
             self.verticalHeader().setDefaultSectionSize(size)
             self.setSizeAdjustPolicy(self.AdjustToContents)
-            print(size, 'size  ', self.size())
+            # print(size, 'size  ', self.size())
         except :
                 print(fex())
 
@@ -154,7 +156,7 @@ class Mytable(QTableView):
     mese = pyqtProperty(str, fget=getMese, fset=setMese, notify=sigModel)
 
 
-class MyDialog(QDialog):
+class MyDialog(QWidget):
     listaMesi = ['Gennaio',
                  'Febbraio',
                  'Marzo',
@@ -167,6 +169,7 @@ class MyDialog(QDialog):
                  'Ottobre',
                  'Novembre',
                  'Dicembre']
+    resized = pyqtSignal()
     def __init__(self,parent=None):
         super(MyDialog, self).__init__(parent)
         self.datas()
@@ -187,7 +190,7 @@ class MyDialog(QDialog):
 
     def selfSetUp(self):
         self.setWindowTitle('TableView v 0.2')
-        self.setMinimumSize(QSize(int(680 * 2), int(600 * 2)))
+        self.setMinimumSize(QSize(int(800), int(800)))
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
@@ -201,6 +204,9 @@ class MyDialog(QDialog):
         # self.cal = MyCalendarCore(self)
         # self.table =self.cal.tableView
         self.table =Mytable(self)
+        # sizeD = self.size().width()
+        # print('primodi size',)
+        # self.table.resizing(int(sizeD/10))
         # self.table.setStyleSheet("background-color: rgb(255, 255, 127)")
         # labSize = QSize(100,30)
         # self.table.setFixedSize(labSize)
@@ -227,6 +233,29 @@ class MyDialog(QDialog):
         self.bot_next.setFixedSize(botSize)
 
     def setUpLayouts(self):
+        self.finalLay = QVBoxLayout()
+        self.finalLay.setObjectName("finalLay")
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.bot_prev.setObjectName("bot_prev")
+        self.horizontalLayout_3.addWidget(self.bot_prev)
+        self.combo.setObjectName("ComboSenzaFreccia")
+        self.horizontalLayout_3.addWidget(self.combo)
+        self.bot_next.setObjectName("bot_next")
+        self.horizontalLayout_3.addWidget(self.bot_next)
+        self.finalLay.addLayout(self.horizontalLayout_3)
+        spacerItem1 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        spacerItem2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.horizontalLayout.addItem(spacerItem1)
+        self.horizontalLayout.addWidget(self.table)
+        self.horizontalLayout.addItem(spacerItem2)
+        self.finalLay.addLayout(self.horizontalLayout)
+        self.setLayout(self.finalLay)
+
+
+    def setUpLayouts_old(self):
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.finalLay = QHBoxLayout()
@@ -325,6 +354,7 @@ class MyDialog(QDialog):
         # self.mapper.toLast()
         self.mapper.setCurrentIndex(QDate().currentDate().month()-1)
     def setUpConnections(self):
+        self.resized.connect(self.tableResizing)
         self.bot_next.clicked.connect(self.mapper.toNext)
         self.bot_prev.clicked.connect(self.mapper.toPrevious)
         try:
@@ -341,6 +371,11 @@ class MyDialog(QDialog):
         # # print('mapper model rows count', self.mapper.model().rowCount())
         # print('-'*20)
 
+    def resizeEvent(self, a0: QResizeEvent) -> None:
+        self.resized.emit()
+    def tableResizing(self):
+        sizeD = self.size().height()
+        self.table.resizingFromParent(int(sizeD /8))
 if __name__ == '__main__':
     from combosenzafreccia import ComboSenzaFreccia
     app = QApplication(sys.argv)
