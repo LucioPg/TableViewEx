@@ -67,9 +67,9 @@ class Mytable(QTableView):
     whoIsComing = pyqtSignal(QWidget)
     sigModel = pyqtSignal(int)
 
-    def __init__(self,parent=None, mese=None):
-        if mese is None:
-            self._mese = mese
+    def __init__(self,parent=None, mesi=None):
+        if mesi is None:
+            self._mesi = mesi
         super(Mytable, self).__init__(parent)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
@@ -94,7 +94,7 @@ class Mytable(QTableView):
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
         # self.doubleClicked.connect(self.dClick)
         self.clicked.connect(self.dClick)
-        self.sigModel.connect(lambda x: print('sig',x, self._mese,self.model().setDate(x)))
+        self.sigModel.connect(lambda x: print('sig', x, self._mesi, self.model().setDate(x)))
         self.setModel(MyModel(self.pagine,parent=parent))
         self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
         # print('frame',self.frameRect(),'wid ', self.rect())
@@ -102,9 +102,10 @@ class Mytable(QTableView):
         self._sizeSection = self.genSizes()
 
     def getMese(self):
-        return self._mese
+        return self._mesi
     def setMese(self,m):
-        self._mese = m
+        self._mesi = m
+        self.model()
 
     def dClick(self,ind):
         return
@@ -129,7 +130,7 @@ class Mytable(QTableView):
             if size is None:
                 # size =  next(self._sizeSection)
                 size =  int(self.horizontalHeader().size().width()/7)
-            print('resizing size:',size)
+            # print('resizing size:',size)
             # print('frame', self.frameRect(), 'wid ', self.rect())
             # self.horizontalHeader().setDefaultSectionSize(size)
             self.verticalHeader().setDefaultSectionSize(size)
@@ -154,7 +155,7 @@ class Mytable(QTableView):
         self.whoIsComing.emit(self)
         super(Mytable, self).update(self)
 
-    mese = pyqtProperty(str, fget=getMese, fset=setMese, notify=sigModel)
+    mesi = pyqtProperty(str, fget=getMese, fset=setMese, notify=sigModel)
 
 
 class MyDialog(QWidget):
@@ -182,11 +183,13 @@ class MyDialog(QWidget):
         self.setUpLayouts()
 
 
-    def datas(self):
+    def datas(self,annoNuovo: int=None):
         # self.pagine = ['vegetale', 'animale']
         self.oggi = QDate().currentDate()
-        # self.pagine = MeseGiorniDictGen.genDict(self.oggi,num=True)
+        if annoNuovo is not None:
+            self.oggi = QDate(annoNuovo,1,1)
         self.pagine = MeseGiorniDictGen.bigList(self.oggi)
+
 
 
     def selfSetUp(self):
@@ -282,6 +285,7 @@ class MyDialog(QWidget):
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setContentsMargins(-1, -1, -1, -1)
         self.horizontalLayout.setObjectName("horizontalLayout")
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -296,6 +300,7 @@ class MyDialog(QWidget):
         self.combo.setSizePolicy(sizePolicy)
         # self.combo.setStyleSheet("")
 
+        self.horizontalLayout.setSpacing(-15)
         self.horizontalLayout.addWidget(self.combo)
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -307,8 +312,11 @@ class MyDialog(QWidget):
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.table.horizontalHeader().setStretchLastSection(False)
+        # self.verticalLayout.setContentsMargins(-1, -1, -1, 10)
         self.verticalLayout.addWidget(self.table)
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
+
+        self.setLayout(self.gridLayout)
 
     def setUpModels(self):
         ## sono gli items che devo essere nella combo (es: i mesi)
@@ -345,7 +353,7 @@ class MyDialog(QWidget):
         self.mapper = QDataWidgetMapper(self)
         self.mapper.setModel(self.model)
         # self.mapper.addMapping(self.table,1,b'currentIndex')
-        self.mapper.addMapping(self.table,1,b'mese')
+        self.mapper.addMapping(self.table,1,b'mesi')
         # self.mapper.addMapping(self.combo,0,b'currentIndex')
         self.mapper.addMapping(self.combo,0)
         self.mapper.currentIndexChanged.connect(self.updateButtons)
@@ -364,8 +372,14 @@ class MyDialog(QWidget):
             print(fex())
         # self.combo.currentIndexChanged.connect(lambda x: self.mapper.model().c)
     def updateButtons(self, row):
+        if row == 11:
+            print('anno nuovo')
+            # self.datas(self.oggi.year()+1)
+            # self.table.model()._mesi = self.pagine
+            # self.mapper.toFirst()
+        else: print(row)
         self.bot_prev.setEnabled(row > 0)
-        self.bot_next.setEnabled(row < self.model.rowCount() - 1)
+        # self.bot_next.setEnabled(row < self.model.rowCount() - 1)
         # print('mapper current index', self.mapper.currentIndex())
         # print('combo current index', self.combo.currentIndex())
         # # print('mapper model rows count', self.mapper.model().rowCount())
@@ -376,10 +390,10 @@ class MyDialog(QWidget):
     def tableAndComboResizing(self):
         sizeD = self.size().height()
         self.table.resizingFromParent(int(sizeD /8))
-        tableWidth = self.table.size().width()
-        botWid = self.bot_next.size().width() *2
-        finalWid = tableWidth -botWid
-        self.combo.setFixedWidth(finalWid)
+        # tableWidth = self.table.size().width()
+        # botWid = self.bot_next.size().width() *2
+        # finalWid = tableWidth -botWid
+        # self.combo.setFixedWidth(finalWid)
 if __name__ == '__main__':
     from combosenzafreccia import ComboSenzaFreccia
     app = QApplication(sys.argv)
