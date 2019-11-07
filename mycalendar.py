@@ -356,21 +356,47 @@ class MyDialog(QWidget):
         self.mapper.addMapping(self.table,1,b'mesi')
         # self.mapper.addMapping(self.combo,0,b'currentIndex')
         self.mapper.addMapping(self.combo,0)
-        self.mapper.currentIndexChanged.connect(self.updateButtons)
+        # self.mapper.currentIndexChanged.connect(self.updateButtons)
         self.mapper.currentIndexChanged.connect(lambda x: self.table.sigModel.emit(x))
         # self.mapper.toFirst()
         # self.mapper.toLast()
         self.mapper.setCurrentIndex(QDate().currentDate().month()-1)
     def setUpConnections(self):
         self.resized.connect(self.tableAndComboResizing)
-        self.bot_next.clicked.connect(self.mapper.toNext)
-        self.bot_prev.clicked.connect(self.mapper.toPrevious)
+        # self.bot_next.clicked.connect(self.mapper.toNext)
+        self.bot_next.clicked.connect(self.toNext)
+        self.bot_prev.clicked.connect(self.toPrevious)
         try:
             self.combo.currentIndexChanged.connect(lambda x: self.mapper.setCurrentIndex(x))
             pass
         except:
             print(fex())
         # self.combo.currentIndexChanged.connect(lambda x: self.mapper.model().c)
+
+    def toPrevious(self):
+        currentIndex = self.mapper.currentIndex()
+        try:
+            self.mapper.setCurrentIndex(currentIndex - 1)
+            afterIndex = self.mapper.currentIndex()
+            if afterIndex == currentIndex:
+                self.datas(self.oggi.year() - 1)
+                self.table.model()._mesi = self.pagine
+                self.mapper.toLast()
+        except:
+            print(fex())
+    def toNext(self):
+        currentIndex = self.mapper.currentIndex()
+        print('toNext current',currentIndex)
+        try:
+            self.mapper.setCurrentIndex(currentIndex+1)
+            afterIndex = self.mapper.currentIndex()
+            if afterIndex == currentIndex:
+                self.datas(self.oggi.year() + 1)
+                self.table.model()._mesi = self.pagine
+                self.mapper.toFirst()
+        except:
+            print(fex())
+
     def updateButtons(self, row):
         if row == 11:
             print('anno nuovo')
@@ -378,7 +404,7 @@ class MyDialog(QWidget):
             # self.table.model()._mesi = self.pagine
             # self.mapper.toFirst()
         else: print(row)
-        self.bot_prev.setEnabled(row > 0)
+        # self.bot_prev.setEnabled(row > 0)
         # self.bot_next.setEnabled(row < self.model.rowCount() - 1)
         # print('mapper current index', self.mapper.currentIndex())
         # print('combo current index', self.combo.currentIndex())
