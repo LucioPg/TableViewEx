@@ -11,54 +11,7 @@ from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView
 from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem, QResizeEvent)
 from meseGiorniDictGen import MeseGiorniDictGen
 from models import MyModel
-class MyCalendarCore(QWidget):
-    cellClicked = pyqtSignal(QDate)
-    def __init__(self,parent=None):
-        super(MyCalendarCore, self).__init__(parent)
-        self.setObjectName('MyCalendarCore')
-        self.setMinimumSize(QSize(int(680 * 1.5), int(600 * 1.5)))
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
-        sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
-        self.setSizePolicy(sizePolicy)
-        self.tableView = Mytable(self)
-        # self.tableView = QTableView(self)
-        self.settaData()
-        hBox1 = QHBoxLayout()
-        hBox1.addWidget(self.tableView)
-        self.setLayout(hBox1)
-        # self.modellogiorni(self.oggi)
-        # self.tableView.cellClickedMyTable.connect(lambda x:self.cellClicked.emit(x))
 
-    def settaData(self,data=QDate().currentDate()) -> QDate():
-        data.daysInMonth()
-        self.oggi = data
-        return self.oggi
-
-    def setDataView(self, data:QDate()= ...) -> QDate():
-        self.dataView = data
-        return self.dataView
-
-    def nextMonth(self):
-        year =self.oggi.year()
-        daysInMonth = self.oggi.daysInMonth()
-        nextMonth = self.oggi.addDays(daysInMonth - self.oggi.day()+1)
-        print(nextMonth)
-        self.settaData(nextMonth)
-
-    # def modellogiorni(self, oggi):        lista = GiorniDelMese.sendList(oggi)
-    #     dati = GiorniDelMese.sendDict(oggi)
-    #     try:
-    #         model = MyModel(oggi=oggi, parent=self)
-    #         self.tableView.setModel(model)
-    #     except:
-    #         print(fex())
-    #
-    # def modelloOggi(self):
-    #     return MyModel(oggi=self.oggi, parent=self)
-
-    def modelloOnTheRun(self,model,dati):
-        self.tableView.setModel(model(oggi=dati,parent=self))
 
 
 class Mytable(QTableView):
@@ -94,6 +47,7 @@ class Mytable(QTableView):
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
         # self.doubleClicked.connect(self.dClick)
         self.clicked.connect(self.click)
+        # self.doubleClicked.connect()
         self.sigModel.connect(lambda x: self.model().setDate(x))
         self.setModel(MyModel(self.pagine,parent=parent))
         self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
@@ -110,7 +64,6 @@ class Mytable(QTableView):
     def click(self, ind):
         # data = self.model().date[ind.row()][ind.column()]
         data = self.model()._date[ind.row()][ind.column()]
-        print(data)
         self.cellClickedMyTable.emit(data)
         # return data
 
@@ -174,6 +127,7 @@ class MyDialog(QWidget):
                  'Novembre',
                  'Dicembre']
     resized = pyqtSignal()
+    doubleClicked = pyqtSignal(QDate)
     def __init__(self,parent=None):
         super(MyDialog, self).__init__(parent)
         self.datas()
@@ -369,7 +323,12 @@ class MyDialog(QWidget):
         self.bot_prev.clicked.connect(self.toPrevious)
         self.combo.currentIndexChanged.connect(lambda x: self.mapper.setCurrentIndex(x))
         self.table.cellClickedMyTable.connect(self.setCurrentDate)
+        self.table.doubleClicked.connect(self.doubleClickSignal)
         # self.combo.currentIndexChanged.connect(lambda x: self.mapper.model().c)
+
+    def doubleClickSignal(self,ind):
+        data = self.model()._date[ind.row()][ind.column()]
+        self.doubleClicked.emit(data)
 
     def toPrevious(self):
         currentIndex = self.mapper.currentIndex()
@@ -396,7 +355,6 @@ class MyDialog(QWidget):
 
     def setCurrentDate(self,data):
         self.currentDate = data
-        print(self.currentDate)
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         self.resized.emit()
