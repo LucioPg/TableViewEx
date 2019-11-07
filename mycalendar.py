@@ -6,7 +6,7 @@ from traceback import format_exc as fex
 from PyQt5.QtCore import (QDate, QObject, pyqtSignal, QSize, QAbstractItemModel, QModelIndex, QByteArray, Qt,
                           QStringListModel, pyqtProperty)
 from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView, QHBoxLayout, QDialog, QPushButton,
-                             QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QLineEdit,QApplication, QLabel)
+                             QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QLineEdit,QApplication, QLabel, QFrame)
 from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem)
 from meseGiorniDictGen import MeseGiorniDictGen
 from models import MyModel
@@ -73,12 +73,17 @@ class Mytable(QTableView):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
         self.verticalHeader().setVisible(False)
+        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShadow(QFrame.Plain)
+        self.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.frameRect()
         # self.resized.connect(self.resizing)
         self.oggi = QDate().currentDate()
         # self.pagine = MeseGiorniDictGen.genDict(self.oggi,num=True)
         self.pagine = MeseGiorniDictGen.bigList(self.oggi)
-        self.horizontalHeader().setDefaultSectionSize(100)
-        self.verticalHeader().setDefaultSectionSize(100)
+
         self.horizontalHeader().setMinimumHeight(30)
         font = QFont('Arial', 20)
         font2 = QFont('Arial', 17)
@@ -91,7 +96,9 @@ class Mytable(QTableView):
         self.sigModel.connect(lambda x: print('sig',x, self._mese,self.model().setDate(x)))
         self.setModel(MyModel(self.pagine,parent=parent))
         self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
+        print('frame',self.frameRect(),'wid ', self.rect())
         # self.resized.connect(self.resizing)
+        self._sizeSection = self.genSizes()
 
     def getMese(self):
         return self._mese
@@ -103,19 +110,33 @@ class Mytable(QTableView):
         self.cellClickedMyTable.emit(data)
         return data
 
-    def resizing(self):
+    def genSizes(self,m=150,M=200):
+        size = m
+        while True:
+            yield size
+            print('gen size ',size)
+            size +=10
+
+    def resizingFromParent(self):
+        pass
+
+    def resizing(self,size=None):
+
+        # print(type(_size))
         try:
-            colWid = int(self.parent().size().width() / 7)-35
-            self.horizontalHeader().setDefaultSectionSize(colWid)
-            self.verticalHeader().setDefaultSectionSize(colWid)
-            self.verticalHeader().count()
-            self.resize(QSize(colWid*7+20, colWid*6+33))
+            if size is None:
+                size =  next(self._sizeSection)
+            print('resizing size:',size)
+            print('frame', self.frameRect(), 'wid ', self.rect())
+            self.horizontalHeader().setDefaultSectionSize(size)
+            self.verticalHeader().setDefaultSectionSize(size)
+            self.setSizeAdjustPolicy(self.AdjustToContents)
+            print(size, 'size  ', self.size())
+        except StopIteration:
+                print(fex())
 
-        except:
-            print(fex())
 
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.verticalHeader().setSizePolicy(sizePolicy)
+
     def resizeEvent(self, event):
         self.resized.emit()
         return super(Mytable, self).resizeEvent(event)
@@ -180,7 +201,7 @@ class MyDialog(QDialog):
         # self.cal = MyCalendarCore(self)
         # self.table =self.cal.tableView
         self.table =Mytable(self)
-        self.table.setStyleSheet("background-color: rgb(255, 255, 127)")
+        # self.table.setStyleSheet("background-color: rgb(255, 255, 127)")
         # labSize = QSize(100,30)
         # self.table.setFixedSize(labSize)
         self.table.setSizePolicy(sizePolicy)
@@ -326,5 +347,4 @@ if __name__ == '__main__':
     app.setStyle('fusion')
     ui = MyDialog()
     ui.show()
-
     sys.exit(app.exec_())
