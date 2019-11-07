@@ -190,10 +190,10 @@ class MyDialog(QWidget):
 
     def selfSetUp(self):
         self.setWindowTitle('TableView v 0.2')
-        self.setMinimumSize(QSize(int(800), int(800)))
+        # self.setMinimumSize(QSize(int(800), int(800)))
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
-        sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasWidthForHeight())
+        sizePolicy.setWidthForHeight(self.sizePolicy().hasHeightForWidth())
         self.setSizePolicy(sizePolicy)
 
     def setUpWidgets(self):
@@ -238,19 +238,24 @@ class MyDialog(QWidget):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.bot_prev.setObjectName("bot_prev")
+        spacerItem3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        spacerItem4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.horizontalLayout_3.addItem(spacerItem3)
         self.horizontalLayout_3.addWidget(self.bot_prev)
         self.combo.setObjectName("ComboSenzaFreccia")
         self.horizontalLayout_3.addWidget(self.combo)
         self.bot_next.setObjectName("bot_next")
         self.horizontalLayout_3.addWidget(self.bot_next)
+        self.horizontalLayout_3.addItem(spacerItem4)
         self.finalLay.addLayout(self.horizontalLayout_3)
         spacerItem1 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         spacerItem2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.horizontalLayout.addItem(spacerItem1)
+        # self.horizontalLayout.addItem(spacerItem1)
         self.horizontalLayout.addWidget(self.table)
-        self.horizontalLayout.addItem(spacerItem2)
+        # self.horizontalLayout.addItem(spacerItem2)
         self.finalLay.addLayout(self.horizontalLayout)
         self.setLayout(self.finalLay)
 
@@ -354,7 +359,7 @@ class MyDialog(QWidget):
         # self.mapper.toLast()
         self.mapper.setCurrentIndex(QDate().currentDate().month()-1)
     def setUpConnections(self):
-        self.resized.connect(self.tableResizing)
+        self.resized.connect(self.tableAndComboResizing)
         self.bot_next.clicked.connect(self.mapper.toNext)
         self.bot_prev.clicked.connect(self.mapper.toPrevious)
         try:
@@ -373,9 +378,13 @@ class MyDialog(QWidget):
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         self.resized.emit()
-    def tableResizing(self):
+    def tableAndComboResizing(self):
         sizeD = self.size().height()
         self.table.resizingFromParent(int(sizeD /8))
+        tableWidth = self.table.size().width()
+        botWid = self.bot_next.size().width() *2
+        finalWid = tableWidth -botWid
+        self.combo.setFixedWidth(finalWid)
 if __name__ == '__main__':
     from combosenzafreccia import ComboSenzaFreccia
     app = QApplication(sys.argv)
