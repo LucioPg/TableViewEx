@@ -96,7 +96,7 @@ class Mytable(QTableView):
         self.sigModel.connect(lambda x: print('sig',x, self._mese,self.model().setDate(x)))
         self.setModel(MyModel(self.pagine,parent=parent))
         self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
-        print('frame',self.frameRect(),'wid ', self.rect())
+        # print('frame',self.frameRect(),'wid ', self.rect())
         # self.resized.connect(self.resizing)
         self._sizeSection = self.genSizes()
 
@@ -132,7 +132,7 @@ class Mytable(QTableView):
             self.verticalHeader().setDefaultSectionSize(size)
             self.setSizeAdjustPolicy(self.AdjustToContents)
             print(size, 'size  ', self.size())
-        except StopIteration:
+        except :
                 print(fex())
 
 
