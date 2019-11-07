@@ -7,13 +7,14 @@ from PyQt5.QtCore import (QDate, pyqtSignal, QSize, Qt,
                           QStringListModel, pyqtProperty)
 from PyQt5.QtGui import (QFont, QStandardItemModel, QStandardItem, QResizeEvent)
 from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView, QHBoxLayout, QPushButton,
-                             QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QApplication,
+                             QComboBox, QVBoxLayout, QDataWidgetMapper, QApplication,
                              QFrame, QGridLayout)
 
 from meseGiorniDictGen import MeseGiorniDictGen
 from models import MyModel
 
 
+# noinspection PyBroadException
 class Mytable(QTableView):
     resized = pyqtSignal()
     cellClickedMyTable = pyqtSignal(QDate)
@@ -88,6 +89,7 @@ class Mytable(QTableView):
     mesi = pyqtProperty(str, fget=getMese, fset=setMese, notify=sigModel)
 
 
+# noinspection PyUnresolvedReferences
 class MyDialog(QWidget):
     listaMesi = ['Gennaio',
                  'Febbraio',
@@ -216,6 +218,7 @@ class MyDialog(QWidget):
             self.model.setItem(row, 0, QStandardItem(item))
             self.model.setItem(row, 1, QStandardItem(types[row]))
 
+    # noinspection PyUnresolvedReferences
     def setUpMapper(self):
         self.mapper = QDataWidgetMapper(self)
         self.mapper.setModel(self.model)
