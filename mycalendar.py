@@ -4,7 +4,7 @@ import sys
 from traceback import format_exc as fex
 
 from PyQt5.QtCore import (QDate, QObject, pyqtSignal, QSize, QAbstractItemModel, QModelIndex, QByteArray, Qt,
-                          QStringListModel)
+                          QStringListModel, pyqtProperty)
 from PyQt5.QtWidgets import (QTableView, QWidget, QSizePolicy, QAbstractItemView, QHBoxLayout, QDialog, QPushButton,
                              QComboBox, QVBoxLayout, QSpacerItem, QDataWidgetMapper, QLineEdit,QApplication, QLabel)
 from PyQt5.QtGui import (QFont, QColor, QBrush, QStandardItemModel, QStandardItem)
@@ -20,8 +20,8 @@ class MyCalendarCore(QWidget):
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
         self.setSizePolicy(sizePolicy)
-        # self.tableView = Mytable(self)
-        self.tableView = QTableView(self)
+        self.tableView = Mytable(self)
+        # self.tableView = QTableView(self)
         self.settaData()
         hBox1 = QHBoxLayout()
         hBox1.addWidget(self.tableView)
@@ -64,14 +64,18 @@ class Mytable(QTableView):
     resized = pyqtSignal()
     cellClickedMyTable = pyqtSignal(QDate)
     whoIsComing = pyqtSignal(QWidget)
-    def __init__(self,parent=None):
+    sigModel = pyqtSignal(int)
+
+    def __init__(self,parent=None, mese=None):
+        if mese is None:
+            self._mese = mese
         super(Mytable, self).__init__(parent)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
         self.verticalHeader().setVisible(False)
         self.resized.connect(self.resizing)
-        self.horizontalHeader().setDefaultSectionSize(500)
-        self.horizontalHeader().setMinimumHeight(30)
+        # self.horizontalHeader().setDefaultSectionSize(500)
+        # self.horizontalHeader().setMinimumHeight(30)
         font = QFont('Arial', 20)
         font2 = QFont('Arial', 17)
         self.horizontalHeader().setFont(font2)
@@ -80,7 +84,13 @@ class Mytable(QTableView):
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
         # self.doubleClicked.connect(self.dClick)
         self.clicked.connect(self.dClick)
+        self.sigModel.connect(lambda x: print('sig',x, self._mese,self.model().setDate(x)))
         # self.resized.connect(self.resizing)
+
+    def getMese(self):
+        return self._mese
+    def setMese(self,m):
+        self._mese = m
 
     def dClick(self,ind):
         data = self.model().date[ind.row()][ind.column()]
@@ -113,6 +123,10 @@ class Mytable(QTableView):
         print(self.objectName())
         self.whoIsComing.emit(self)
         super(Mytable, self).update(self)
+
+    mese = pyqtProperty(str, fget=getMese, fset=setMese, notify=sigModel)
+
+
 class MyDialog(QDialog):
     listaMesi = ['Gennaio',
                  'Febbraio',
@@ -131,21 +145,22 @@ class MyDialog(QDialog):
         self.datas()
         self.selfSetUp()
         self.setUpWidgets()
-        self.setUpLayouts()
         self.setUpModels()
         self.setUpMapper()
         self.setUpConnections()
+        self.setUpLayouts()
 
 
     def datas(self):
         # self.pagine = ['vegetale', 'animale']
         self.oggi = QDate().currentDate()
-        self.pagine = MeseGiorniDictGen.genDict(self.oggi,num=True)
+        # self.pagine = MeseGiorniDictGen.genDict(self.oggi,num=True)
+        self.pagine = MeseGiorniDictGen.bigList(self.oggi)
 
 
     def selfSetUp(self):
         self.setWindowTitle('TableView v 0.2')
-        self.setMinimumSize(QSize(int(680 * 1.5), int(600 * 1.5)))
+        self.setMinimumSize(QSize(int(680 * 2), int(600 * 2)))
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
@@ -156,8 +171,9 @@ class MyDialog(QDialog):
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         sizePolicy.setWidthForHeight(self.sizePolicy().hasWidthForHeight())
-        self.cal = MyCalendarCore(self)
-        self.table =self.cal.tableView
+        # self.cal = MyCalendarCore(self)
+        # self.table =self.cal.tableView
+        self.table =Mytable(self)
         self.table.setStyleSheet("background-color: rgb(255, 255, 127)")
         # labSize = QSize(100,30)
         # self.table.setFixedSize(labSize)
@@ -211,8 +227,17 @@ class MyDialog(QDialog):
         # self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setObjectName("table")
         # self.table.horizontalHeader().setStretchLastSection(True)
-        self.verticalLayout_2.addWidget(self.cal)
+        # self.verticalLayout_2.addWidget(self.cal)
+        hor = QHBoxLayout()
+        sp1 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        sp2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        hor.addItem(sp1)
+        hor.addItem(sp2)
+        hor.addWidget(self.table)
+        self.verticalLayout_2.addLayout(hor)
+        spacerItem13 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.centLay.addLayout(self.verticalLayout_2)
+        self.verticalLayout_2.addItem(spacerItem13)
         self.finalLay.addLayout(self.centLay)
         self.nextLay = QVBoxLayout()
         self.nextLay.setObjectName("nextLay")
@@ -226,8 +251,8 @@ class MyDialog(QDialog):
         spacerItem3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.nextLay.addItem(spacerItem3)
         self.finalLay.addLayout(self.nextLay)
-        self.horizontalLayout.addLayout(self.finalLay)
-        self.setLayout(self.horizontalLayout)
+        # self.horizontalLayout.addLayout(self.finalLay)
+        self.setLayout(self.finalLay)
 
     def setUpModels(self):
         ## sono gli items che devo essere nella combo (es: i mesi)
@@ -253,18 +278,22 @@ class MyDialog(QDialog):
         for row, item in enumerate(items):
             self.model.setItem(row, 0, QStandardItem(item))
             self.model.setItem(row, 1, QStandardItem(types[row]))
+            # self.model.setItem(row, 1, QStandardItem(types[2]))
             # self.model.setItem(row, 1, QStandardItem(types[row]))
         # for row, col in enumerate()
-        # self.combo.setEditable(False)
+        # self.combo.setEditable(
+
+        # self.model.itemChanged.connect(lambda x: print('DATACHANGED',dir(x),end='\n'))
 
     def setUpMapper(self):
         self.mapper = QDataWidgetMapper(self)
         self.mapper.setModel(self.model)
         # self.mapper.addMapping(self.table,1,b'currentIndex')
-        self.mapper.addMapping(self.table,1)
+        self.mapper.addMapping(self.table,1,b'mese')
         # self.mapper.addMapping(self.combo,0,b'currentIndex')
         self.mapper.addMapping(self.combo,0)
         self.mapper.currentIndexChanged.connect(self.updateButtons)
+        self.mapper.currentIndexChanged.connect(lambda x: self.table.sigModel.emit(x))
         # self.mapper.toFirst()
         # self.mapper.toLast()
         self.mapper.setCurrentIndex(QDate().currentDate().month()-1)
@@ -280,10 +309,10 @@ class MyDialog(QDialog):
     def updateButtons(self, row):
         self.bot_prev.setEnabled(row > 0)
         self.bot_next.setEnabled(row < self.model.rowCount() - 1)
-        print('mapper current index', self.mapper.currentIndex())
-        print('combo current index', self.combo.currentIndex())
-        # print('mapper model rows count', self.mapper.model().rowCount())
-        print('-'*20)
+        # print('mapper current index', self.mapper.currentIndex())
+        # print('combo current index', self.combo.currentIndex())
+        # # print('mapper model rows count', self.mapper.model().rowCount())
+        # print('-'*20)
 
 if __name__ == '__main__':
     from combosenzafreccia import ComboSenzaFreccia

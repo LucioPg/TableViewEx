@@ -134,6 +134,13 @@ class MeseGiorniDictGen(QObject):
             else:
                 dizAnno[m-1] = lista
         return dizAnno
+    @staticmethod
+    def bigList(oggi: QDate = ...) -> list:
+        bigList = []
+        for m in range(1, 13):
+            primoDellAnno = QDate(oggi.year(), m, 1)
+            bigList.append(MeseGiorniDictGen.sendList(primoDellAnno))
+        return bigList
 
     @staticmethod
     def iLunedi(oggi):
