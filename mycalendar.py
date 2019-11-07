@@ -73,9 +73,13 @@ class Mytable(QTableView):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
         self.verticalHeader().setVisible(False)
-        self.resized.connect(self.resizing)
-        # self.horizontalHeader().setDefaultSectionSize(500)
-        # self.horizontalHeader().setMinimumHeight(30)
+        # self.resized.connect(self.resizing)
+        self.oggi = QDate().currentDate()
+        # self.pagine = MeseGiorniDictGen.genDict(self.oggi,num=True)
+        self.pagine = MeseGiorniDictGen.bigList(self.oggi)
+        self.horizontalHeader().setDefaultSectionSize(100)
+        self.verticalHeader().setDefaultSectionSize(100)
+        self.horizontalHeader().setMinimumHeight(30)
         font = QFont('Arial', 20)
         font2 = QFont('Arial', 17)
         self.horizontalHeader().setFont(font2)
@@ -85,6 +89,8 @@ class Mytable(QTableView):
         # self.doubleClicked.connect(self.dClick)
         self.clicked.connect(self.dClick)
         self.sigModel.connect(lambda x: print('sig',x, self._mese,self.model().setDate(x)))
+        self.setModel(MyModel(self.pagine,parent=parent))
+        self.setSizeAdjustPolicy(self.AdjustToContentsOnFirstShow)
         # self.resized.connect(self.resizing)
 
     def getMese(self):
@@ -93,7 +99,7 @@ class Mytable(QTableView):
         self._mese = m
 
     def dClick(self,ind):
-        data = self.model().date[ind.row()][ind.column()]
+        return
         self.cellClickedMyTable.emit(data)
         return data
 
