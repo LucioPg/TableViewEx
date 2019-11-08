@@ -90,7 +90,7 @@ class Mytable(QTableView):
 
 
 # noinspection PyUnresolvedReferences
-class MyDialog(QWidget):
+class MyCalendar(QWidget):
     listaMesi = ['Gennaio',
                  'Febbraio',
                  'Marzo',
@@ -107,7 +107,7 @@ class MyDialog(QWidget):
     doubleClicked = pyqtSignal(QDate)
 
     def __init__(self, parent=None):
-        super(MyDialog, self).__init__(parent)
+        super(MyCalendar, self).__init__(parent)
         self.datas()
         self.selfSetUp()
         self.setUpWidgets()
@@ -285,6 +285,6 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     app.setStyle('fusion')
-    ui = MyDialog()
+    ui = MyCalendar()
     ui.show()
     sys.exit(app.exec_())
